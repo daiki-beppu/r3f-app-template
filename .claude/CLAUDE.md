@@ -1,67 +1,82 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+React Three Fiber (R3F) アプリケーションテンプレート用の開発ガイドです。
 
-## Project Overview
+## プロジェクト概要
 
-React Three Fiber (R3F) アプリケーション。以下の技術スタックで構成:
+このプロジェクトは React Three Fiber を使用した 3D グラフィックスアプリケーションのテンプレートです。
+
+### 技術スタック
 
 - **React 19** - UI フレームワーク
-- **React Three Fiber** - Three.js の React レンダラー (3D グラフィックス)
-- **TypeScript** - 型安全性
-- **Vite** - ビルドツール・開発サーバー
+- **React Three Fiber (R3F)** - Three.js の React レンダラー
+- **TypeScript 5.9** - 型安全性（strict mode 有効）
+- **Vite 7** - ビルドツール・開発サーバー
 - **Tailwind CSS v4** - スタイリング
 - **Bun** - パッケージマネージャー・ランタイム
+- **Ultracite** - コード品質ツール（Oxlint + Oxfmt）
 
-## Development Commands
+## 開発コマンド
 
-**このプロジェクトは `ni` (Node Installer) を使用してパッケージマネージャーを自動検出します。**
+すべてのパッケージマネージャーコマンドは `ni` を使用してください:
 
-```bash
-# 開発サーバー起動 (HMR 有効)
-nr dev
+- `nr dev` - 開発サーバーを起動
+- `nr build` - プロダクションビルドを作成
+- `nr preview` - ビルドしたアプリケーションをプレビュー
+- `nr fix` - Ultracite でコードを自動修正（型チェック付き）
+- `nr check` - Ultracite でコードをチェック
 
-# プロダクションビルド (型チェック + ビルド)
-nr build
-
-# ビルド結果のプレビュー
-nr preview
-
-# コードフォーマット・Lint 修正 (型チェック付き)
-nr fix
-
-# パッケージのインストール
-ni
-
-# 依存関係の追加
-ni <package-name>
-
-# 開発依存関係の追加
-ni -D <package-name>
-```
-
-`ni` コマンドは `bun.lock` の存在を検出し、自動的に `bun` を使用します。
-
-## Project Structure
+## プロジェクト構造
 
 ```
 src/
-├── app.tsx        # メインアプリケーションコンポーネント
-├── main.tsx       # エントリーポイント
-├── global.css     # グローバルスタイル (Tailwind 含む)
+├── app.tsx        # メインアプリケーションコンポーネント（Canvas を含む）
+├── main.tsx       # エントリーポイント（React StrictMode を使用）
+├── global.css     # グローバルスタイル
 └── assets/        # 静的アセット
 ```
 
-- エントリーポイント: `src/main.tsx` → `index.html`
-- React StrictMode 有効
-- TypeScript strict mode 有効
+### 重要なポイント
 
-## React Three Fiber (R3F) Guidelines
+- **エントリーポイント**: `src/main.tsx` が React アプリケーションを初期化
+- **StrictMode**: React.StrictMode が有効化されています
+- **型安全性**: TypeScript の strict モードが有効
 
-R3F を使用する際の注意点:
+## React Three Fiber (R3F) ガイドライン
 
-- `<Canvas>` コンポーネント内で Three.js オブジェクトを JSX として記述
-- R3F の hooks (`useFrame`, `useThree`, `useLoader` など) は `<Canvas>` 内でのみ使用可能
-- Three.js のクラス名は小文字・キャメルケースに変換 (例: `THREE.Mesh` → `<mesh>`)
-- Props は Three.js オブジェクトのプロパティに直接マッピング
-- `args` prop で constructor 引数を指定
+### Canvas コンポーネント
+
+- すべての R3F コンポーネントは `<Canvas>` 内に配置する必要があります
+- `<Canvas>` は通常のReactコンポーネントツリーのどこにでも配置可能
+
+### R3F Hooks の使用制限
+
+以下の R3F hooks は `<Canvas>` の**内部**でのみ使用できます:
+
+- `useThree()`
+- `useFrame()`
+- その他の R3F 専用フック
+
+これらを `<Canvas>` の外で使用するとエラーになります。
+
+### コンポーネント構成の例
+
+```tsx
+// ❌ 誤った使い方
+export const App = () => {
+  const { camera } = useThree(); // エラー: Canvas の外
+  return <Canvas>...</Canvas>;
+};
+
+// ✅ 正しい使い方
+const Scene = () => {
+  const { camera } = useThree(); // OK: Canvas の内側
+  return <mesh>...</mesh>;
+};
+
+export const App = () => (
+  <Canvas>
+    <Scene />
+  </Canvas>
+);
+```
