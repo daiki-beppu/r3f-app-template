@@ -8,10 +8,12 @@ import {
   Text,
 } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Leva, useControls } from "leva";
 import { useRef } from "react";
 
 export const App = () => (
   <div className="fixed top-0 left-0  w-dvw h-dvh overflow-hidden bg-sky-300/50">
+    <Leva collapsed />
     <Canvas>
       <Scene />
     </Canvas>
@@ -21,8 +23,28 @@ export const App = () => (
 export const Scene = () => {
   const spherRef = useRef<Mesh>(null);
 
+  const { floatAnimation, spinAnimation, visible, scale, position } =
+    useControls("sphere", {
+      floatAnimation: true,
+      position: {
+        joystick: "invertY",
+        max: 5,
+        min: -5,
+        step: 0.01,
+        value: { x: 0, y: -1 },
+      },
+      scale: {
+        max: 5,
+        min: 0,
+        step: 0.1,
+        value: 1,
+      },
+      spinAnimation: true,
+      visible: true,
+    });
+
   useFrame((_state, delta) => {
-    if (spherRef.current) {
+    if (spherRef.current && spinAnimation) {
       spherRef.current.rotation.y += delta;
     }
   });
@@ -44,8 +66,13 @@ export const Scene = () => {
         <meshNormalMaterial />
       </Text>
 
-      <Float speed={10}>
-        <mesh ref={spherRef} position={[0, -1, -2]}>
+      <Float speed={10} enabled={floatAnimation}>
+        <mesh
+          ref={spherRef}
+          position={[position.x, position.y, -2]}
+          scale={scale}
+          visible={visible}
+        >
           <sphereGeometry />
           <meshNormalMaterial wireframe />
           <Html
